@@ -1,0 +1,250 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Dashboard - Expense Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-chart-line me-2"></i>Dashboard
+        </h1>
+        <p class="page-subtitle">Welcome back, {{ user.get_full_name }}! Here's your financial overview for {{ current_month }}.</p>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="stat-card income">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box income">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div>
+                        <div class="stat-label">This Month Income</div>
+                        <div class="stat-value text-success">₹{{ month_income|floatformat:2 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="stat-card expense">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box expense">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div>
+                        <div class="stat-label">This Month Expense</div>
+                        <div class="stat-value text-danger">₹{{ month_expense|floatformat:2 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="stat-card balance">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box balance">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div>
+                        <div class="stat-label">This Month Balance</div>
+                        <div class="stat-value {% if month_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            ₹{{ month_balance|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box" style="background-color: #FEF3C7; color: #92400E;">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div>
+                        <div class="stat-label">Total Balance</div>
+                        <div class="stat-value {% if total_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            ₹{{ total_balance|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-4">
+                    <h5 class="mb-3">Quick Actions</h5>
+                    <a href="{% url 'add_income' %}" class="btn btn-success me-2">
+                        <i class="fas fa-plus-circle me-2"></i>Add Income
+                    </a>
+                    <a href="{% url 'add_expense' %}" class="btn btn-danger me-2">
+                        <i class="fas fa-minus-circle me-2"></i>Add Expense
+                    </a>
+                    <a href="{% url 'reports' %}" class="btn btn-primary">
+                        <i class="fas fa-chart-bar me-2"></i>View Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Recent Income -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-arrow-up text-success me-2"></i>Recent Income
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_income %}
+                        {% for income in recent_income %}
+                        <div class="transaction-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ income.source }}</div>
+                                <small class="text-muted">
+                                    {{ income.category.name }} • {{ income.transaction_date }}
+                                </small>
+                            </div>
+                            <div class="text-success fw-bold">
+                                +₹{{ income.amount|floatformat:2 }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>No income transactions yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-body border-top">
+                    <a href="{% url 'income_list' %}" class="btn btn-sm btn-outline-primary w-100">
+                        View All Income
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Expenses -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-arrow-down text-danger me-2"></i>Recent Expenses
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_expense %}
+                        {% for expense in recent_expense %}
+                        <div class="transaction-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold">{{ expense.description }}</div>
+                                <small class="text-muted">
+                                    {{ expense.category.name }} • {{ expense.transaction_date }}
+                                </small>
+                            </div>
+                            <div class="text-danger fw-bold">
+                                -₹{{ expense.amount|floatformat:2 }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>No expense transactions yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-body border-top">
+                    <a href="{% url 'expense_list' %}" class="btn btn-sm btn-outline-primary w-100">
+                        View All Expenses
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expense by Category Chart -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-2"></i>Expenses by Category (This Month)
+                </div>
+                <div class="card-body">
+                    {% if expense_by_category %}
+                    <canvas id="categoryChart" height="100"></canvas>
+                    {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                        <p>No expense data available for this month</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    {% if expense_by_category %}
+    // Category Chart
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    const categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                {% for cat in expense_by_category %}
+                    '{{ cat.category__name }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for cat in expense_by_category %}
+                        {{ cat.total|floatformat:2 }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    {% for cat in expense_by_category %}
+                        '{{ cat.category__color }}',
+                    {% endfor %}
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ₹' + context.parsed.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}
+

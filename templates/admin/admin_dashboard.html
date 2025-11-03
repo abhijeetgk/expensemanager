@@ -1,0 +1,814 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Expense Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #4F46E5;
+        --success-color: #10B981;
+        --danger-color: #EF4444;
+        --warning-color: #F59E0B;
+        --info-color: #3B82F6;
+        --dark-color: #1F2937;
+        --light-bg: #F9FAFB;
+    }
+    
+    body {
+        background-color: var(--light-bg);
+    }
+    
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .admin-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .admin-header .subtitle {
+        opacity: 0.9;
+        font-size: 0.95rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border-left: 4px solid;
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+    }
+    
+    .stat-card.primary { border-left-color: var(--primary-color); }
+    .stat-card.success { border-left-color: var(--success-color); }
+    .stat-card.danger { border-left-color: var(--danger-color); }
+    .stat-card.warning { border-left-color: var(--warning-color); }
+    .stat-card.info { border-left-color: var(--info-color); }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-right: 1rem;
+    }
+    
+    .stat-icon.primary { background: rgba(79, 70, 229, 0.1); color: var(--primary-color); }
+    .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+    .stat-icon.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+    .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+    .stat-icon.info { background: rgba(59, 130, 246, 0.1); color: var(--info-color); }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6B7280;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .stat-change {
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    
+    .widget-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+        height: 100%;
+    }
+    
+    .widget-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #F3F4F6;
+    }
+    
+    .widget-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--dark-color);
+        margin: 0;
+    }
+    
+    .widget-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .list-item {
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        background: #F9FAFB;
+        transition: all 0.2s ease;
+    }
+    
+    .list-item:hover {
+        background: #F3F4F6;
+        transform: translateX(5px);
+    }
+    
+    .category-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        margin-right: 0.75rem;
+    }
+    
+    .progress-bar-custom {
+        height: 8px;
+        border-radius: 4px;
+        background: #E5E7EB;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s ease;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-top: 1rem;
+    }
+    
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .quick-stat-item {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .quick-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+    
+    .quick-stat-label {
+        font-size: 0.875rem;
+        color: #6B7280;
+        margin-top: 0.25rem;
+    }
+    
+    .payment-method-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: #F9FAFB;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .badge-custom {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+    .badge-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+    .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+    .badge-info { background: rgba(59, 130, 246, 0.1); color: var(--info-color); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Admin Header -->
+<div class="admin-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h1>
+                <p class="subtitle mb-0">{{ current_date }} • Welcome back, {{ user.get_full_name|default:user.email }}</p>
+            </div>
+            <div>
+                <a href="{% url 'admin:index' %}" class="btn btn-light me-2">
+                    <i class="fas fa-cog me-1"></i>Django Admin
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Main Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card success">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon success">
+                        <i class="fas fa-arrow-trend-up"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-value text-success">₹{{ total_income|floatformat:0 }}</div>
+                        <div class="stat-label">Total Income</div>
+                        <div class="stat-change text-muted">
+                            <small>{{ total_income_count }} transactions</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card danger">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon danger">
+                        <i class="fas fa-arrow-trend-down"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-value text-danger">₹{{ total_expense|floatformat:0 }}</div>
+                        <div class="stat-label">Total Expense</div>
+                        <div class="stat-change text-muted">
+                            <small>{{ total_expense_count }} transactions</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card primary">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon primary">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-value {% if total_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            ₹{{ total_balance|floatformat:0 }}
+                        </div>
+                        <div class="stat-label">Net Balance</div>
+                        <div class="stat-change text-muted">
+                            <small>All time</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card info">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon info">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="stat-value text-info">{{ total_users }}</div>
+                        <div class="stat-label">Total Users</div>
+                        <div class="stat-change text-muted">
+                            <small>{{ active_users }} active</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Period Stats -->
+    <div class="quick-stats">
+        <div class="quick-stat-item">
+            <div class="quick-stat-value text-success">₹{{ today_income|floatformat:0 }}</div>
+            <div class="quick-stat-label">Today's Income</div>
+        </div>
+        <div class="quick-stat-item">
+            <div class="quick-stat-value text-danger">₹{{ today_expense|floatformat:0 }}</div>
+            <div class="quick-stat-label">Today's Expense</div>
+        </div>
+        <div class="quick-stat-item">
+            <div class="quick-stat-value text-success">₹{{ week_income|floatformat:0 }}</div>
+            <div class="quick-stat-label">This Week Income</div>
+        </div>
+        <div class="quick-stat-item">
+            <div class="quick-stat-value text-danger">₹{{ week_expense|floatformat:0 }}</div>
+            <div class="quick-stat-label">This Week Expense</div>
+        </div>
+        <div class="quick-stat-item">
+            <div class="quick-stat-value text-primary">{{ month_income_count }}</div>
+            <div class="quick-stat-label">Month Income Txns</div>
+        </div>
+        <div class="quick-stat-item">
+            <div class="quick-stat-value text-primary">{{ month_expense_count }}</div>
+            <div class="quick-stat-label">Month Expense Txns</div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- 7 Days Trend -->
+        <div class="col-lg-8 mb-4">
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <i class="fas fa-chart-line me-2 text-primary"></i>7-Day Trend Analysis
+                    </h3>
+                    <span class="badge badge-info">Last 7 Days</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="weeklyTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- User Distribution -->
+        <div class="col-lg-4 mb-4">
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <i class="fas fa-users me-2 text-primary"></i>User Distribution
+                    </h3>
+                </div>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="userDistributionChart"></canvas>
+                </div>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span><i class="fas fa-circle text-danger me-2"></i>Admins</span>
+                        <strong>{{ admin_users }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span><i class="fas fa-circle text-warning me-2"></i>Power Users</span>
+                        <strong>{{ power_users }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span><i class="fas fa-circle text-info me-2"></i>Regular Users</span>
+                        <strong>{{ regular_users }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Trend -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <i class="fas fa-chart-area me-2 text-primary"></i>6-Month Financial Overview
+                    </h3>
+                    <span class="badge badge-success">Last 6 Months</span>
+                </div>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Category Performance & Top Users -->
+    <div class="row mb-4">
+        <!-- Top Expense Categories -->
+        <div class="col-lg-6 mb-4">
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <i class="fas fa-chart-pie me-2 text-danger"></i>Top Expense Categories
+                    </h3>
+                    <span class="badge badge-danger">This Month</span>
+                </div>
+                {% if top_expense_categories %}
+                    {% for cat in top_expense_categories %}
+                    <div class="list-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <span class="category-badge" style="background-color: {{ cat.category__color }};">
+                                    {{ cat.category__name }}
+                                </span>
+                                <div class="progress-bar-custom flex-grow-1 mx-3">
+                                    <div class="progress-fill" style="width: {% widthratio cat.total top_expense_categories.0.total 100 %}%; background: {{ cat.category__color }};"></div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-danger">₹{{ cat.total|floatformat:2 }}</div>
+                                <small class="text-muted">{{ cat.count }} txns</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">No expense data available</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Top Income Categories -->
+        <div class="col-lg-6 mb-4">
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <i class="fas fa-chart-pie me-2 text-success"></i>Top Income Categories
+                    </h3>
+                    <span class="badge badge-success">This Month</span>
+                </div>
+                {% if top_income_categories %}
+                    {% for cat in top_income_categories %}
+                    <div class="list-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <span class="category-badge" style="background-color: {{ cat.category__color }};">
+                                    {{ cat.category__name }}
+                                </span>
+                                <div class="progress-bar-custom flex-grow-1 mx-3">
+                                    <div class="progress-fill" style="width: {% widthratio cat.total top_income_categories.0.total 100 %}%; background: {{ cat.category__color }};"></div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-success">₹{{ cat.total|floatformat:2 }}</div>
+                                <small class="text-muted">{{ cat.count }} txns</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">No income data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Activity & Payment Methods -->
+    <div class="row mb-4">
+        <!-- Top Spenders -->
+        <div class="col-lg-4 mb-4">
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <i class="fas fa-fire me-2 text-danger"></i>Top Spenders
+                    </h3>
+                </div>
+                {% if top_spenders %}
+                    {% for user in top_spenders %}
+                    <div class="list-item">
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar">
+                                {{ user.created_by__first_name|default:user.created_by__email|slice:":1"|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">{{ user.created_by__first_name }} {{ user.created_by__last_name }}</div>
+                                <small class="text-muted">{{ user.transaction_count }} transactions</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-danger">₹{{ user.total_spent|floatformat:0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">No data available</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Most Active Users -->
+        <div class="col-lg-4 mb-4">
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <i class="fas fa-bolt me-2 text-warning"></i>Most Active Users
+                    </h3>
+                </div>
+                {% if active_users_list %}
+                    {% for user in active_users_list %}
+                    <div class="list-item">
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar">
+                                {{ user.name|slice:":1"|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">{{ user.name }}</div>
+                                <small class="text-muted">
+                                    <i class="fas fa-arrow-up text-success"></i> {{ user.income_count }}
+                                    <i class="fas fa-arrow-down text-danger ms-2"></i> {{ user.expense_count }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge badge-warning">{{ user.total_transactions }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">No data available</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Payment Methods -->
+        <div class="col-lg-4 mb-4">
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <i class="fas fa-credit-card me-2 text-info"></i>Payment Methods
+                    </h3>
+                </div>
+                {% if payment_methods %}
+                    {% for method in payment_methods %}
+                    <div class="payment-method-item">
+                        <div>
+                            <div class="fw-bold">{{ method.payment_method }}</div>
+                            <small class="text-muted">{{ method.count }} transactions</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold">₹{{ method.total|floatformat:0 }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">No data available</p>
+                {% endif %}
+                
+                {% if pending_reimbursement_count > 0 %}
+                <div class="mt-3 p-3 bg-warning bg-opacity-10 rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            <strong>Pending Reimbursements</strong>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-warning">₹{{ pending_reimbursement_amount|floatformat:2 }}</div>
+                            <small class="text-muted">{{ pending_reimbursement_count }} items</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="row mb-4">
+        <!-- Recent Income -->
+        <div class="col-lg-6 mb-4">
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <i class="fas fa-clock me-2 text-success"></i>Recent Income
+                    </h3>
+                </div>
+                {% if recent_income %}
+                    {% for income in recent_income %}
+                    <div class="list-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">{{ income.category.name }}</div>
+                                <small class="text-muted">
+                                    {{ income.created_by.get_full_name|default:income.created_by.email }} • 
+                                    {{ income.transaction_date|date:"d M Y" }}
+                                </small>
+                                {% if income.description %}
+                                <div class="text-muted small mt-1">{{ income.description|truncatewords:10 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="text-end ms-3">
+                                <div class="fw-bold text-success">+₹{{ income.amount|floatformat:2 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">No recent income</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Recent Expenses -->
+        <div class="col-lg-6 mb-4">
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <i class="fas fa-clock me-2 text-danger"></i>Recent Expenses
+                    </h3>
+                </div>
+                {% if recent_expense %}
+                    {% for expense in recent_expense %}
+                    <div class="list-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">{{ expense.category.name }}</div>
+                                <small class="text-muted">
+                                    {{ expense.created_by.get_full_name|default:expense.created_by.email }} • 
+                                    {{ expense.transaction_date|date:"d M Y" }}
+                                </small>
+                                {% if expense.description %}
+                                <div class="text-muted small mt-1">{{ expense.description|truncatewords:10 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="text-end ms-3">
+                                <div class="fw-bold text-danger">-₹{{ expense.amount|floatformat:2 }}</div>
+                                {% if expense.is_reimbursable %}
+                                <span class="badge badge-warning small">Reimbursable</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">No recent expenses</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Chart.js default configuration
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#6B7280';
+    
+    // 7-Day Trend Chart
+    const weeklyTrendCtx = document.getElementById('weeklyTrendChart').getContext('2d');
+    new Chart(weeklyTrendCtx, {
+        type: 'line',
+        data: {
+            labels: {{ last_7_days|safe }},
+            datasets: [{
+                label: 'Income',
+                data: {{ daily_income|safe }},
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 3
+            }, {
+                label: 'Expense',
+                data: {{ daily_expense|safe }},
+                borderColor: '#EF4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ₹' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // User Distribution Pie Chart
+    const userDistCtx = document.getElementById('userDistributionChart').getContext('2d');
+    new Chart(userDistCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Admins', 'Power Users', 'Regular Users'],
+            datasets: [{
+                data: [{{ admin_users }}, {{ power_users }}, {{ regular_users }}],
+                backgroundColor: ['#EF4444', '#F59E0B', '#3B82F6'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    // Monthly Trend Chart
+    const monthlyTrendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+    new Chart(monthlyTrendCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ monthly_labels|safe }},
+            datasets: [{
+                label: 'Income',
+                data: {{ monthly_income_data|safe }},
+                backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                borderRadius: 8,
+                borderSkipped: false
+            }, {
+                label: 'Expense',
+                data: {{ monthly_expense_data|safe }},
+                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ₹' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+

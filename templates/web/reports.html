@@ -1,0 +1,257 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Reports - Expense Manager{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-chart-bar me-2"></i>Financial Reports
+        </h1>
+        <p class="page-subtitle">View detailed analytics and reports</p>
+    </div>
+    
+    <!-- Date Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Generate Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card income">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box income">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div>
+                        <div class="stat-label">Total Income</div>
+                        <div class="stat-value text-success">₹{{ report.total_income|floatformat:2 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="stat-card expense">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box expense">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div>
+                        <div class="stat-label">Total Expense</div>
+                        <div class="stat-value text-danger">₹{{ report.total_expense|floatformat:2 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="stat-card balance">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box balance">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div>
+                        <div class="stat-label">Net Balance</div>
+                        <div class="stat-value {% if report.net_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            ₹{{ report.net_balance|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Category Breakdown -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-2"></i>Expense Breakdown by Category
+                </div>
+                <div class="card-body">
+                    {% if category_breakdown %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="categoryBreakdown"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th class="text-end">Amount</th>
+                                        <th class="text-end">%</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cat in category_breakdown %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge" style="background-color: {{ cat.color }};">
+                                                {{ cat.category_name }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end fw-bold">₹{{ cat.total_amount|floatformat:2 }}</td>
+                                        <td class="text-end">{{ cat.percentage|floatformat:1 }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                        <p>No expense data available for the selected period</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Trend Analysis -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-2"></i>Income vs Expense Trend (Last 6 Months)
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    {% if category_breakdown %}
+    // Category Breakdown Chart
+    const ctxBreakdown = document.getElementById('categoryBreakdown').getContext('2d');
+    new Chart(ctxBreakdown, {
+        type: 'pie',
+        data: {
+            labels: [
+                {% for cat in category_breakdown %}
+                    '{{ cat.category_name }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for cat in category_breakdown %}
+                        {{ cat.total_amount|floatformat:2 }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    {% for cat in category_breakdown %}
+                        '{{ cat.color }}',
+                    {% endfor %}
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ₹' + context.parsed.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Trend Chart
+    const ctxTrend = document.getElementById('trendChart').getContext('2d');
+    new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+            labels: [
+                {% for item in trend_data.monthly_trend %}
+                    '{{ item.month_name }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Income',
+                data: [
+                    {% for item in trend_data.monthly_trend %}
+                        {{ item.income }},
+                    {% endfor %}
+                ],
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Expense',
+                data: [
+                    {% for item in trend_data.monthly_trend %}
+                        {{ item.expense }},
+                    {% endfor %}
+                ],
+                borderColor: '#EF4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ₹' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toFixed(0);
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+
