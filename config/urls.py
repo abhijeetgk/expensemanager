@@ -11,7 +11,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
-from apps.dashboard import web_views
+from apps.dashboard import web_views, calendar_views
 
 urlpatterns = [
     # Web Interface (User-facing)
@@ -24,6 +24,10 @@ urlpatterns = [
     path('expense/', web_views.expense_list_view, name='expense_list'),
     path('reports/', web_views.reports_view, name='reports'),
     path('budgets/', web_views.budgets_view, name='budgets'),
+    path('calendar/', calendar_views.calendar_view, name='calendar'),
+    path('calendar/api/events/', calendar_views.calendar_events_api, name='calendar_events_api'),
+    path('calendar/api/day-summary/', calendar_views.calendar_day_summary_api, name='calendar_day_summary_api'),
+    path('calendar/api/month-summary/', calendar_views.calendar_month_summary_api, name='calendar_month_summary_api'),
     path('income/<uuid:pk>/edit/', web_views.edit_income_view, name='edit_income'),
     path('expense/<uuid:pk>/edit/', web_views.edit_expense_view, name='edit_expense'),
     path('income/<uuid:pk>/delete/', web_views.delete_income_view, name='delete_income'),

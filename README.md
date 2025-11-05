@@ -17,6 +17,7 @@ A comprehensive Django-based expense management system with role-based access co
 ### 🎉 New Features (v2.0)
 - **💰 Budget Tracking & Alerts**: Set budgets, track spending, get automatic alerts at 80% and 100% utilization
 - **👥 Split & Shared Expenses**: Create expense groups, split bills, track debts, and settle payments
+- **📅 Calendar View**: Interactive calendar to visualize all transactions with color-coded events
 - **🌙 Dark Mode**: Toggle between light and dark themes with persistent preference
 - **📱 Floating Action Button**: Quick access to add income/expense from any page
 - **📱 Mobile-First Design**: Enhanced responsive design for mobile devices
@@ -195,6 +196,7 @@ See `PROJECT_DESIGN.md` for detailed deployment instructions.
 
 - **[API Documentation](API_DOCUMENTATION.md)** - Complete API reference
 - **[New Features Guide](NEW_FEATURES_GUIDE.md)** - Detailed guide for v2.0 features
+- **[Calendar Feature Guide](CALENDAR_FEATURE.md)** - Interactive calendar documentation
 - **[Web Interface Guide](WEB_INTERFACE_GUIDE.md)** - User interface documentation
 - **[Project Design](PROJECT_DESIGN.md)** - Technical architecture
 - **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment
@@ -224,6 +226,18 @@ POST /api/expense-groups/
 # Create shared expense and split equally
 POST /api/shared-expenses/
 POST /api/shared-expenses/{id}/create_equal_splits/
+```
+
+### Calendar View
+```bash
+# Access interactive calendar
+http://localhost:8000/calendar/
+
+# Features:
+# - Visual transaction overview
+# - Month/Week/Day/List views
+# - Click events for details
+# - Click dates to add transactions
 ```
 
 ### Dark Mode & FAB
