@@ -23,6 +23,7 @@ urlpatterns = [
     path('income/', web_views.income_list_view, name='income_list'),
     path('expense/', web_views.expense_list_view, name='expense_list'),
     path('reports/', web_views.reports_view, name='reports'),
+    path('budgets/', web_views.budgets_view, name='budgets'),
     path('income/<uuid:pk>/edit/', web_views.edit_income_view, name='edit_income'),
     path('expense/<uuid:pk>/edit/', web_views.edit_expense_view, name='edit_expense'),
     path('income/<uuid:pk>/delete/', web_views.delete_income_view, name='delete_income'),
@@ -41,6 +42,8 @@ urlpatterns = [
     path('api/categories/', include('apps.categories.urls')),
     path('api/transactions/', include('apps.transactions.urls')),
     path('api/reports/', include('apps.reports.urls')),
+    path('api/', include('apps.budgets.urls')),
+    path('api/', include('apps.shared_expenses.urls')),
     path('dashboard/', include('apps.dashboard.urls')),
 ]
 

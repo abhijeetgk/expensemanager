@@ -1,0 +1,2 @@
+# Migrations for budgets app
+

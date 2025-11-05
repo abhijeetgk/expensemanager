@@ -4,6 +4,7 @@ A comprehensive Django-based expense management system with role-based access co
 
 ## Features
 
+### Core Features
 - **User Management**: Multi-role user system (Admin, Power User, User)
 - **Category Management**: Dynamic income and expense categories
 - **Transaction Tracking**: Detailed income and expense entries
@@ -12,6 +13,13 @@ A comprehensive Django-based expense management system with role-based access co
 - **Admin Dashboard**: Rich UI with charts and widgets
 - **RESTful API**: Complete API for all operations
 - **Role-Based Permissions**: Granular access control
+
+### 🎉 New Features (v2.0)
+- **💰 Budget Tracking & Alerts**: Set budgets, track spending, get automatic alerts at 80% and 100% utilization
+- **👥 Split & Shared Expenses**: Create expense groups, split bills, track debts, and settle payments
+- **🌙 Dark Mode**: Toggle between light and dark themes with persistent preference
+- **📱 Floating Action Button**: Quick access to add income/expense from any page
+- **📱 Mobile-First Design**: Enhanced responsive design for mobile devices
 
 ## Technology Stack
 
@@ -71,17 +79,22 @@ python manage.py runserver
 
 ```
 expenseManager/
-├── config/                 # Project configuration
+├── config/                   # Project configuration
 ├── apps/
-│   ├── accounts/          # User management
-│   ├── categories/        # Category management
-│   ├── transactions/      # Income & Expense transactions
-│   ├── reports/           # Reporting & Analytics
-│   ├── dashboard/         # Admin dashboard
-│   └── core/              # Shared utilities
-├── static/                # Static files
-├── media/                 # User uploads
-└── templates/             # HTML templates
+│   ├── accounts/            # User management
+│   ├── categories/          # Category management
+│   ├── transactions/        # Income & Expense transactions
+│   ├── reports/             # Reporting & Analytics
+│   ├── dashboard/           # Admin dashboard
+│   ├── budgets/            # 💰 Budget tracking & alerts (NEW)
+│   ├── shared_expenses/    # 👥 Split expenses & debt tracking (NEW)
+│   └── core/               # Shared utilities
+├── static/                  # Static files
+├── media/                   # User uploads
+└── templates/              # HTML templates
+    └── web/
+        ├── budgets.html    # 💰 Budget management page (NEW)
+        └── ...
 ```
 
 ## API Documentation
@@ -115,6 +128,23 @@ expenseManager/
 - `GET /api/reports/monthly/` - Get monthly report
 - `POST /api/reports/export/excel/` - Export to Excel
 - `POST /api/reports/export/pdf/` - Export to PDF
+
+### 💰 Budgets (NEW)
+- `GET /api/budgets/` - List all budgets
+- `POST /api/budgets/` - Create budget
+- `GET /api/budgets/current/` - Get current budgets
+- `GET /api/budgets/summary/` - Budget summary
+- `GET /api/budgets/forecast/` - Budget forecast
+- `GET /api/budget-alerts/unread/` - Get unread alerts
+
+### 👥 Shared Expenses (NEW)
+- `GET /api/expense-groups/` - List expense groups
+- `POST /api/expense-groups/` - Create group
+- `GET /api/shared-expenses/` - List shared expenses
+- `POST /api/shared-expenses/` - Create shared expense
+- `GET /api/debts/my_debts/` - Get my debts
+- `GET /api/debts/owed_to_me/` - Get debts owed to me
+- `POST /api/debts/{id}/add_payment/` - Add payment
 
 ## User Roles
 
@@ -161,11 +191,51 @@ python manage.py migrate
 
 See `PROJECT_DESIGN.md` for detailed deployment instructions.
 
+## 📚 Documentation
+
+- **[API Documentation](API_DOCUMENTATION.md)** - Complete API reference
+- **[New Features Guide](NEW_FEATURES_GUIDE.md)** - Detailed guide for v2.0 features
+- **[Web Interface Guide](WEB_INTERFACE_GUIDE.md)** - User interface documentation
+- **[Project Design](PROJECT_DESIGN.md)** - Technical architecture
+- **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment
+
+## 🎯 Quick Start with New Features
+
+### Budget Tracking
+```bash
+# Access budget management
+http://localhost:8000/budgets/
+
+# Or via API
+curl -X POST http://localhost:8000/api/budgets/ \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"category": "food-id", "amount": 15000, "period": "MONTHLY"}'
+```
+
+### Split Expenses
+```python
+# Create expense group
+POST /api/expense-groups/
+{
+    "name": "Roommates",
+    "members": ["user1-id", "user2-id"]
+}
+
+# Create shared expense and split equally
+POST /api/shared-expenses/
+POST /api/shared-expenses/{id}/create_equal_splits/
+```
+
+### Dark Mode & FAB
+- **Dark Mode**: Click the moon/sun icon (bottom-left corner)
+- **Quick Add**: Click the + button (bottom-right corner)
+- Both features work automatically on all pages!
+
 ## License
 
 MIT License
 
 ## Author
 
-Generated with advanced OOP patterns and modern Python features.
+Built with advanced OOP patterns, modern Python features, and user-centric design.
 
