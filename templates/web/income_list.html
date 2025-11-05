@@ -88,7 +88,10 @@
                         <td>{{ income.description|truncatewords:10 }}</td>
                         <td class="text-end text-success fw-bold">+₹{{ income.amount|floatformat:2 }}</td>
                         <td class="text-center">
-                            <a href="{% url 'delete_income' income.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this income entry?')">
+                            <a href="{% url 'edit_income' income.id %}" class="btn btn-sm btn-primary me-1" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'delete_income' income.id %}" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this income entry?')">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </td>

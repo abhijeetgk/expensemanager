@@ -23,6 +23,8 @@ urlpatterns = [
     path('income/', web_views.income_list_view, name='income_list'),
     path('expense/', web_views.expense_list_view, name='expense_list'),
     path('reports/', web_views.reports_view, name='reports'),
+    path('income/<uuid:pk>/edit/', web_views.edit_income_view, name='edit_income'),
+    path('expense/<uuid:pk>/edit/', web_views.edit_expense_view, name='edit_expense'),
     path('income/<uuid:pk>/delete/', web_views.delete_income_view, name='delete_income'),
     path('expense/<uuid:pk>/delete/', web_views.delete_expense_view, name='delete_expense'),
     

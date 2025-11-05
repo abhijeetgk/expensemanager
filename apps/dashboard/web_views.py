@@ -290,3 +290,73 @@ def delete_expense_view(request, pk):
     messages.success(request, 'Expense entry deleted successfully!')
     return redirect('expense_list')
 
+
+@login_required
+def edit_income_view(request, pk):
+    """Edit income entry."""
+    income = get_object_or_404(Income, pk=pk, created_by=request.user)
+    
+    if request.method == 'POST':
+        try:
+            income.amount = Decimal(request.POST.get('amount'))
+            income.description = request.POST.get('description')
+            income.transaction_date = request.POST.get('transaction_date')
+            income.category_id = request.POST.get('category')
+            income.source = request.POST.get('source', '')
+            income.save()
+            messages.success(request, 'Income entry updated successfully!')
+            return redirect('income_list')
+        except Exception as e:
+            messages.error(request, f'Error updating income: {str(e)}')
+    
+    categories = IncomeCategory.objects.filter(is_active=True).order_by('name')
+    
+    context = {
+        'income': income,
+        'categories': categories,
+    }
+    
+    return render(request, 'web/edit_income.html', context)
+
+
+@login_required
+def edit_expense_view(request, pk):
+    """Edit expense entry."""
+    expense = get_object_or_404(Expense, pk=pk, created_by=request.user)
+    
+    if request.method == 'POST':
+        try:
+            expense.amount = Decimal(request.POST.get('amount'))
+            expense.description = request.POST.get('description')
+            expense.transaction_date = request.POST.get('transaction_date')
+            expense.category_id = request.POST.get('category')
+            expense.payment_method = request.POST.get('payment_method', 'CASH')
+            expense.vendor = request.POST.get('vendor', '')
+            expense.location = request.POST.get('location', '')
+            
+            # Handle receipt upload
+            if request.FILES.get('receipt'):
+                expense.receipt = request.FILES['receipt']
+            
+            expense.save()
+            messages.success(request, 'Expense entry updated successfully!')
+            return redirect('expense_list')
+        except Exception as e:
+            messages.error(request, f'Error updating expense: {str(e)}')
+    
+    categories = ExpenseCategory.objects.filter(is_active=True).order_by('name')
+    
+    context = {
+        'expense': expense,
+        'categories': categories,
+        'payment_methods': [
+            ('CASH', 'Cash'),
+            ('CREDIT_CARD', 'Credit Card'),
+            ('DEBIT_CARD', 'Debit Card'),
+            ('BANK_TRANSFER', 'Bank Transfer'),
+            ('MOBILE_PAYMENT', 'Mobile Payment'),
+        ]
+    }
+    
+    return render(request, 'web/edit_expense.html', context)
+

@@ -102,7 +102,10 @@
                         <td>{{ expense.vendor|default:"-" }}</td>
                         <td class="text-end text-danger fw-bold">-₹{{ expense.amount|floatformat:2 }}</td>
                         <td class="text-center">
-                            <a href="{% url 'delete_expense' expense.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this expense entry?')">
+                            <a href="{% url 'edit_expense' expense.id %}" class="btn btn-sm btn-primary me-1" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'delete_expense' expense.id %}" class="btn btn-sm btn-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this expense entry?')">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </td>

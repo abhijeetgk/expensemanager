@@ -1,0 +1,114 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Edit Expense - Expense Manager{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-edit text-danger me-2"></i>Edit Expense Entry
+        </h1>
+        <p class="page-subtitle">Update your expense transaction</p>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="amount" class="form-label">
+                                    <i class="fas fa-rupee-sign me-1"></i>Amount *
+                                </label>
+                                <input type="number" step="0.01" class="form-control" id="amount" name="amount" required placeholder="₹0.00" value="{{ expense.amount }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="transaction_date" class="form-label">
+                                    <i class="fas fa-calendar me-1"></i>Date *
+                                </label>
+                                <input type="date" class="form-control" id="transaction_date" name="transaction_date" value="{{ expense.transaction_date|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="category" class="form-label">
+                                <i class="fas fa-tags me-1"></i>Category *
+                            </label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select a category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if category.id == expense.category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                    {% if category.is_essential %}(Essential){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="payment_method" class="form-label">
+                                    <i class="fas fa-credit-card me-1"></i>Payment Method *
+                                </label>
+                                <select class="form-select" id="payment_method" name="payment_method" required>
+                                    {% for method_value, method_label in payment_methods %}
+                                    <option value="{{ method_value }}" {% if method_value == expense.payment_method %}selected{% endif %}>{{ method_label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="vendor" class="form-label">
+                                    <i class="fas fa-store me-1"></i>Vendor
+                                </label>
+                                <input type="text" class="form-control" id="vendor" name="vendor" placeholder="e.g., Store name, Restaurant" value="{{ expense.vendor }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="location" class="form-label">
+                                <i class="fas fa-map-marker-alt me-1"></i>Location
+                            </label>
+                            <input type="text" class="form-control" id="location" name="location" placeholder="e.g., Downtown, Mall" value="{{ expense.location }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-comment me-1"></i>Description *
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required placeholder="Enter details about this expense">{{ expense.description }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="receipt" class="form-label">
+                                <i class="fas fa-receipt me-1"></i>Receipt (Optional)
+                            </label>
+                            {% if expense.receipt %}
+                            <div class="mb-2">
+                                <small class="text-muted">Current receipt: <a href="{{ expense.receipt.url }}" target="_blank">View Receipt</a></small>
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="receipt" name="receipt" accept="image/*,.pdf">
+                            <small class="text-muted">Upload a new receipt to replace the existing one</small>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'expense_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-check me-2"></i>Update Expense
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
