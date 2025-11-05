@@ -360,3 +360,9 @@ def edit_expense_view(request, pk):
     
     return render(request, 'web/edit_expense.html', context)
 
+
+@login_required
+def budgets_view(request):
+    """Budget management page."""
+    return render(request, 'web/budgets.html')
+

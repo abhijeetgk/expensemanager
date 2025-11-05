@@ -1,0 +1,403 @@
+{% extends 'web/base.html' %}
+{% load static %}
+
+{% block title %}Calendar - Expense Manager{% endblock %}
+
+{% block extra_css %}
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.css' rel='stylesheet' />
+
+<style>
+    .calendar-container {
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    #calendar {
+        margin-top: 20px;
+    }
+    
+    .fc {
+        background: var(--card-bg);
+        color: var(--text-color);
+    }
+    
+    .fc-toolbar-title {
+        color: var(--text-color) !important;
+        font-weight: 700;
+    }
+    
+    .fc-button {
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+    }
+    
+    .fc-button:hover {
+        background-color: #4338CA !important;
+    }
+    
+    .fc-button:disabled {
+        opacity: 0.5;
+    }
+    
+    .fc-daygrid-day-number {
+        color: var(--text-color);
+    }
+    
+    .fc-col-header-cell-cushion {
+        color: var(--text-color);
+    }
+    
+    .fc-daygrid-day {
+        background: var(--card-bg);
+    }
+    
+    .fc-day-today {
+        background-color: rgba(79, 70, 229, 0.1) !important;
+    }
+    
+    [data-theme="dark"] .fc-day-today {
+        background-color: rgba(99, 102, 241, 0.2) !important;
+    }
+    
+    .summary-cards {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+    }
+    
+    .summary-card {
+        flex: 1;
+        min-width: 200px;
+        padding: 20px;
+        border-radius: 12px;
+        color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .summary-card h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        opacity: 0.9;
+    }
+    
+    .summary-card .amount {
+        font-size: 28px;
+        font-weight: 700;
+    }
+    
+    .income-card {
+        background: linear-gradient(135deg, #10B981, #059669);
+    }
+    
+    .expense-card {
+        background: linear-gradient(135deg, #EF4444, #DC2626);
+    }
+    
+    .balance-card {
+        background: linear-gradient(135deg, #3B82F6, #2563EB);
+    }
+    
+    .fc-event {
+        cursor: pointer;
+        border-radius: 4px;
+        padding: 2px 4px;
+        font-size: 12px;
+    }
+    
+    .quick-add-container {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 10;
+    }
+    
+    .view-toggle {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .view-toggle button {
+        padding: 8px 16px;
+        border: 2px solid var(--border-color);
+        background: var(--card-bg);
+        color: var(--text-color);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .view-toggle button.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .legend {
+        display: flex;
+        gap: 20px;
+        margin-top: 15px;
+        padding: 15px;
+        background: var(--light-bg);
+        border-radius: 8px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .legend-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+    }
+    
+    .legend-dot.income {
+        background: #10B981;
+    }
+    
+    .legend-dot.expense {
+        background: #EF4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-calendar-alt text-primary"></i> Transaction Calendar</h2>
+            <p class="text-muted">Visualize your income and expenses over time</p>
+        </div>
+        <div class="quick-add-container">
+            <div class="btn-group">
+                <a href="{% url 'add_income' %}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Add Income
+                </a>
+                <a href="{% url 'add_expense' %}" class="btn btn-danger">
+                    <i class="fas fa-plus"></i> Add Expense
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="summary-cards" id="summaryCards">
+        <div class="summary-card income-card">
+            <h3>Total Income</h3>
+            <div class="amount" id="monthIncome">₹0.00</div>
+        </div>
+        <div class="summary-card expense-card">
+            <h3>Total Expenses</h3>
+            <div class="amount" id="monthExpense">₹0.00</div>
+        </div>
+        <div class="summary-card balance-card">
+            <h3>Net Balance</h3>
+            <div class="amount" id="monthBalance">₹0.00</div>
+        </div>
+    </div>
+    
+    <!-- Calendar Container -->
+    <div class="calendar-container">
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <button class="active" data-view="dayGridMonth">
+                <i class="fas fa-calendar"></i> Month
+            </button>
+            <button data-view="timeGridWeek">
+                <i class="fas fa-calendar-week"></i> Week
+            </button>
+            <button data-view="timeGridDay">
+                <i class="fas fa-calendar-day"></i> Day
+            </button>
+            <button data-view="listMonth">
+                <i class="fas fa-list"></i> List
+            </button>
+        </div>
+        
+        <!-- Calendar -->
+        <div id="calendar"></div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot income"></div>
+                <span>Income</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot expense"></div>
+                <span>Expense</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction Detail Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="transactionModalTitle">Transaction Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="transactionModalBody">
+                <!-- Transaction details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="editTransactionBtn" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js'></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const transactionModal = new bootstrap.Modal(document.getElementById('transactionModal'));
+    
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: '' // We'll use custom buttons
+        },
+        events: '/calendar/api/events/',
+        eventClick: function(info) {
+            showTransactionDetails(info.event);
+        },
+        dateClick: function(info) {
+            // Quick add for clicked date
+            const date = info.dateStr;
+            if (confirm(`Add a transaction for ${date}?`)) {
+                window.location.href = `/expense/add/?date=${date}`;
+            }
+        },
+        datesSet: function(dateInfo) {
+            // Update summary when month changes
+            updateMonthSummary(dateInfo.start);
+        }
+    });
+    
+    calendar.render();
+    
+    // View toggle buttons
+    document.querySelectorAll('.view-toggle button').forEach(button => {
+        button.addEventListener('click', function() {
+            const view = this.getAttribute('data-view');
+            calendar.changeView(view);
+            
+            // Update active state
+            document.querySelectorAll('.view-toggle button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            this.classList.add('active');
+        });
+    });
+    
+    // Show transaction details
+    function showTransactionDetails(event) {
+        const props = event.extendedProps;
+        const type = props.type;
+        const isIncome = type === 'income';
+        
+        let html = `
+            <div class="transaction-details">
+                <div class="mb-3">
+                    <span class="badge ${isIncome ? 'bg-success' : 'bg-danger'} mb-2">
+                        ${isIncome ? 'Income' : 'Expense'}
+                    </span>
+                    <h4>₹${props.amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</h4>
+                </div>
+                <table class="table table-sm">
+                    <tr>
+                        <th width="40%">Category:</th>
+                        <td>${props.category}</td>
+                    </tr>
+                    <tr>
+                        <th>Description:</th>
+                        <td>${props.description || 'N/A'}</td>
+                    </tr>
+        `;
+        
+        if (isIncome) {
+            html += `
+                    <tr>
+                        <th>Source:</th>
+                        <td>${props.source || 'N/A'}</td>
+                    </tr>
+            `;
+        } else {
+            html += `
+                    <tr>
+                        <th>Vendor:</th>
+                        <td>${props.vendor || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <th>Payment Method:</th>
+                        <td>${props.payment_method || 'N/A'}</td>
+                    </tr>
+            `;
+        }
+        
+        html += `
+                    <tr>
+                        <th>Date:</th>
+                        <td>${event.start.toLocaleDateString()}</td>
+                    </tr>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('transactionModalBody').innerHTML = html;
+        document.getElementById('transactionModalTitle').textContent = 
+            `${isIncome ? 'Income' : 'Expense'} Transaction`;
+        
+        // Set edit button link
+        const editUrl = isIncome ? 
+            `/income/${props.transactionId}/edit/` : 
+            `/expense/${props.transactionId}/edit/`;
+        document.getElementById('editTransactionBtn').href = editUrl;
+        
+        transactionModal.show();
+    }
+    
+    // Update month summary
+    function updateMonthSummary(date) {
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        
+        fetch(`/calendar/api/month-summary/?year=${year}&month=${month}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('monthIncome').textContent = 
+                    '₹' + data.income_total.toLocaleString('en-IN', {minimumFractionDigits: 2});
+                document.getElementById('monthExpense').textContent = 
+                    '₹' + data.expense_total.toLocaleString('en-IN', {minimumFractionDigits: 2});
+                document.getElementById('monthBalance').textContent = 
+                    '₹' + data.net_balance.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            });
+    }
+    
+    // Initial summary load
+    updateMonthSummary(new Date());
+});
+</script>
+{% endblock %}
+

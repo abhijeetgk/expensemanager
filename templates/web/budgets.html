@@ -1,0 +1,391 @@
+{% extends 'web/base.html' %}
+{% load static %}
+
+{% block title %}Budget Management - Expense Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .budget-card {
+        border-left: 4px solid;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .budget-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .progress-custom {
+        height: 25px;
+        border-radius: 10px;
+        position: relative;
+    }
+    
+    .progress-text {
+        position: absolute;
+        width: 100%;
+        text-align: center;
+        line-height: 25px;
+        color: white;
+        font-weight: bold;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .budget-status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 12px;
+    }
+    
+    .status-active { background-color: #10B981; color: white; }
+    .status-exceeded { background-color: #EF4444; color: white; }
+    .status-near-limit { background-color: #F59E0B; color: white; }
+    
+    .alert-notification {
+        animation: slideIn 0.5s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-chart-pie text-primary"></i> Budget Management</h2>
+            <p class="text-muted">Track and manage your spending budgets</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
+            <i class="fas fa-plus"></i> Create Budget
+        </button>
+    </div>
+
+    <!-- Budget Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Total Budget</h6>
+                    <h3 id="totalBudget">₹0.00</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Total Spent</h6>
+                    <h3 id="totalSpent">₹0.00</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Remaining</h6>
+                    <h3 id="totalRemaining">₹0.00</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="text-white-50">Utilization</h6>
+                    <h3 id="totalUtilization">0%</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts Section -->
+    <div id="alertsSection" class="mb-4" style="display: none;">
+        <h5 class="mb-3"><i class="fas fa-bell text-warning"></i> Budget Alerts</h5>
+        <div id="alertsList"></div>
+    </div>
+
+    <!-- Budget List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Current Budgets</h5>
+                </div>
+                <div class="card-body">
+                    <div id="budgetsList" class="row">
+                        <!-- Budgets will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Budget Modal -->
+<div class="modal fade" id="addBudgetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Budget</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addBudgetForm">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Budget Name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" name="category" required>
+                            <option value="">Select Category</option>
+                            <!-- Categories will be loaded here -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount (₹)</label>
+                        <input type="number" class="form-control" name="amount" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Period</label>
+                        <select class="form-select" name="period" required>
+                            <option value="MONTHLY">Monthly</option>
+                            <option value="QUARTERLY">Quarterly</option>
+                            <option value="YEARLY">Yearly</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" name="start_date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" name="end_date" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="alert_threshold_80" checked>
+                            <label class="form-check-label">Alert at 80% usage</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="alert_threshold_100" checked>
+                            <label class="form-check-label">Alert when budget exceeded</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    loadCategories();
+    loadBudgetSummary();
+    loadBudgetAlerts();
+    
+    // Set default start date to first of current month
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    $('input[name="start_date"]').val(firstDay.toISOString().split('T')[0]);
+    $('input[name="end_date"]').val(lastDay.toISOString().split('T')[0]);
+    
+    // Handle budget creation
+    $('#addBudgetForm').on('submit', function(e) {
+        e.preventDefault();
+        createBudget();
+    });
+});
+
+function loadCategories() {
+    $.ajax({
+        url: '/api/categories/expense/',
+        method: 'GET',
+        success: function(data) {
+            const select = $('select[name="category"]');
+            data.results.forEach(category => {
+                select.append(`<option value="${category.id}">${category.name}</option>`);
+            });
+        }
+    });
+}
+
+function loadBudgetSummary() {
+    $.ajax({
+        url: '/api/budgets/summary/',
+        method: 'GET',
+        success: function(data) {
+            $('#totalBudget').text(`₹${parseFloat(data.total_budget).toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+            $('#totalSpent').text(`₹${parseFloat(data.total_spent).toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+            $('#totalRemaining').text(`₹${parseFloat(data.total_remaining).toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+            $('#totalUtilization').text(`${parseFloat(data.utilization_percentage).toFixed(1)}%`);
+            
+            displayBudgets(data.budgets);
+        }
+    });
+}
+
+function displayBudgets(budgets) {
+    const container = $('#budgetsList');
+    container.empty();
+    
+    if (budgets.length === 0) {
+        container.html('<div class="col-12 text-center py-5"><p class="text-muted">No budgets found. Create your first budget!</p></div>');
+        return;
+    }
+    
+    budgets.forEach(budget => {
+        const utilization = parseFloat(budget.utilization_percentage);
+        let progressColor = 'bg-success';
+        let statusClass = 'status-active';
+        let statusText = 'On Track';
+        
+        if (utilization >= 100) {
+            progressColor = 'bg-danger';
+            statusClass = 'status-exceeded';
+            statusText = 'Exceeded';
+        } else if (utilization >= 80) {
+            progressColor = 'bg-warning';
+            statusClass = 'status-near-limit';
+            statusText = 'Near Limit';
+        }
+        
+        const borderColor = utilization >= 100 ? '#EF4444' : utilization >= 80 ? '#F59E0B' : '#10B981';
+        
+        const card = `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card budget-card" style="border-left-color: ${borderColor};">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">${budget.name}</h5>
+                            <span class="budget-status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        <p class="text-muted mb-2">${budget.category_detail.name}</p>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Budget: ${budget.formatted_amount}</small>
+                                <small>${utilization.toFixed(1)}%</small>
+                            </div>
+                            <div class="progress progress-custom">
+                                <div class="progress-bar ${progressColor}" role="progressbar" 
+                                     style="width: ${Math.min(utilization, 100)}%" 
+                                     aria-valuenow="${utilization}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                                <div class="progress-text">${budget.formatted_spent}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span><i class="fas fa-calendar"></i> ${budget.days_remaining} days left</span>
+                            <span><i class="fas fa-wallet"></i> ${budget.formatted_remaining} left</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.append(card);
+    });
+}
+
+function loadBudgetAlerts() {
+    $.ajax({
+        url: '/api/budget-alerts/unread/',
+        method: 'GET',
+        success: function(data) {
+            if (data.length > 0) {
+                $('#alertsSection').show();
+                const alertsList = $('#alertsList');
+                alertsList.empty();
+                
+                data.forEach(alert => {
+                    const alertColor = alert.alert_type === 'EXCEEDED' ? 'danger' : 'warning';
+                    const alertHtml = `
+                        <div class="alert alert-${alertColor} alert-notification alert-dismissible fade show">
+                            <strong><i class="fas fa-exclamation-triangle"></i> ${alert.alert_type === 'EXCEEDED' ? 'Budget Exceeded!' : 'Budget Alert'}</strong>
+                            <p class="mb-0">${alert.message}</p>
+                            <small class="text-muted">${alert.time_ago} ago</small>
+                            <button type="button" class="btn-close" data-alert-id="${alert.id}" onclick="markAlertRead('${alert.id}')"></button>
+                        </div>
+                    `;
+                    alertsList.append(alertHtml);
+                });
+            }
+        }
+    });
+}
+
+function markAlertRead(alertId) {
+    $.ajax({
+        url: `/api/budget-alerts/${alertId}/mark_read_single/`,
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+        }
+    });
+}
+
+function createBudget() {
+    const formData = {
+        name: $('input[name="name"]').val(),
+        category: $('select[name="category"]').val(),
+        amount: $('input[name="amount"]').val(),
+        period: $('select[name="period"]').val(),
+        start_date: $('input[name="start_date"]').val(),
+        end_date: $('input[name="end_date"]').val(),
+        alert_threshold_80: $('input[name="alert_threshold_80"]').is(':checked'),
+        alert_threshold_100: $('input[name="alert_threshold_100"]').is(':checked'),
+    };
+    
+    $.ajax({
+        url: '/api/budgets/',
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val(),
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(formData),
+        success: function() {
+            $('#addBudgetModal').modal('hide');
+            $('#addBudgetForm')[0].reset();
+            showSuccess('Budget created successfully!');
+            loadBudgetSummary();
+        },
+        error: function(xhr) {
+            showError('Failed to create budget: ' + JSON.stringify(xhr.responseJSON));
+        }
+    });
+}
+
+function showSuccess(message) {
+    alert(message);
+}
+
+function showError(message) {
+    alert(message);
+}
+</script>
+{% endblock %}
+
