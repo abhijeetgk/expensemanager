@@ -28,6 +28,7 @@ urlpatterns = [
     path('calendar/api/events/', calendar_views.calendar_events_api, name='calendar_events_api'),
     path('calendar/api/day-summary/', calendar_views.calendar_day_summary_api, name='calendar_day_summary_api'),
     path('calendar/api/month-summary/', calendar_views.calendar_month_summary_api, name='calendar_month_summary_api'),
+    path('ai-assistant/', include('apps.ai_assistant.urls')),
     path('income/<uuid:pk>/edit/', web_views.edit_income_view, name='edit_income'),
     path('expense/<uuid:pk>/edit/', web_views.edit_expense_view, name='edit_expense'),
     path('income/<uuid:pk>/delete/', web_views.delete_income_view, name='delete_income'),

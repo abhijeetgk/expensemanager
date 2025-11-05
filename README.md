@@ -14,10 +14,11 @@ A comprehensive Django-based expense management system with role-based access co
 - **RESTful API**: Complete API for all operations
 - **Role-Based Permissions**: Granular access control
 
-### 🎉 New Features (v2.0)
+### 🎉 New Features (v2.0+)
 - **💰 Budget Tracking & Alerts**: Set budgets, track spending, get automatic alerts at 80% and 100% utilization
 - **👥 Split & Shared Expenses**: Create expense groups, split bills, track debts, and settle payments
 - **📅 Calendar View**: Interactive calendar to visualize all transactions with color-coded events
+- **🤖 AI Assistant**: Add transactions using natural language - just type "add income of rs 10000 under salary on 03 nov 25"
 - **🌙 Dark Mode**: Toggle between light and dark themes with persistent preference
 - **📱 Floating Action Button**: Quick access to add income/expense from any page
 - **📱 Mobile-First Design**: Enhanced responsive design for mobile devices
@@ -197,6 +198,7 @@ See `PROJECT_DESIGN.md` for detailed deployment instructions.
 - **[API Documentation](API_DOCUMENTATION.md)** - Complete API reference
 - **[New Features Guide](NEW_FEATURES_GUIDE.md)** - Detailed guide for v2.0 features
 - **[Calendar Feature Guide](CALENDAR_FEATURE.md)** - Interactive calendar documentation
+- **[AI Assistant Guide](AI_ASSISTANT_GUIDE.md)** - Natural language transaction entry
 - **[Web Interface Guide](WEB_INTERFACE_GUIDE.md)** - User interface documentation
 - **[Project Design](PROJECT_DESIGN.md)** - Technical architecture
 - **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment
@@ -238,6 +240,23 @@ http://localhost:8000/calendar/
 # - Month/Week/Day/List views
 # - Click events for details
 # - Click dates to add transactions
+```
+
+### AI Assistant - Natural Language Entry
+```bash
+# Access AI chat assistant
+http://localhost:8000/ai-assistant/chat/
+
+# Just type naturally:
+"Add income of rs 10000 under salary on 03 nov 25"
+"Spent 500 on groceries yesterday"
+"Paid 2000 for electricity today"
+
+# The AI will:
+# - Parse your input automatically
+# - Ask for missing information
+# - Confirm before adding
+# - Create the transaction instantly
 ```
 
 ### Dark Mode & FAB

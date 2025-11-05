@@ -1,0 +1,615 @@
+{% extends 'web/base.html' %}
+{% load static %}
+
+{% block title %}AI Assistant - Expense Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        max-width: 800px;
+        margin: 0 auto;
+        height: calc(100vh - 200px);
+        display: flex;
+        flex-direction: column;
+        background: var(--card-bg);
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .chat-header {
+        background: linear-gradient(135deg, var(--primary-color), #6366F1);
+        color: white;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .chat-header .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    
+    .chat-header .info h3 {
+        margin: 0;
+        font-size: 18px;
+    }
+    
+    .chat-header .info p {
+        margin: 0;
+        font-size: 12px;
+        opacity: 0.9;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: var(--light-bg);
+    }
+    
+    .message {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    .message.bot {
+        flex-direction: row;
+    }
+    
+    .message.user {
+        flex-direction: row-reverse;
+    }
+    
+    .message-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 18px;
+    }
+    
+    .message.bot .message-avatar {
+        background: linear-gradient(135deg, var(--primary-color), #6366F1);
+        color: white;
+    }
+    
+    .message.user .message-avatar {
+        background: var(--secondary-color);
+        color: white;
+    }
+    
+    .message-content {
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 15px;
+        word-wrap: break-word;
+    }
+    
+    .message.bot .message-content {
+        background: var(--card-bg);
+        color: var(--text-color);
+        border-bottom-left-radius: 5px;
+    }
+    
+    .message.user .message-content {
+        background: var(--primary-color);
+        color: white;
+        border-bottom-right-radius: 5px;
+    }
+    
+    .message-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .message-button {
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 2px solid var(--primary-color);
+        background: transparent;
+        color: var(--primary-color);
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+    }
+    
+    .message-button:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .chat-input-container {
+        padding: 20px;
+        background: var(--card-bg);
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .chat-input-wrapper {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .chat-input {
+        flex: 1;
+        padding: 12px 20px;
+        border: 2px solid var(--border-color);
+        border-radius: 25px;
+        background: var(--light-bg);
+        color: var(--text-color);
+        font-size: 15px;
+        outline: none;
+        transition: all 0.3s;
+    }
+    
+    .chat-input:focus {
+        border-color: var(--primary-color);
+    }
+    
+    .send-button {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), #6366F1);
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        transition: all 0.3s;
+    }
+    
+    .send-button:hover {
+        transform: scale(1.1);
+    }
+    
+    .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .typing-indicator {
+        display: none;
+        padding: 12px 16px;
+        background: var(--card-bg);
+        border-radius: 15px;
+        width: fit-content;
+    }
+    
+    .typing-indicator.active {
+        display: block;
+    }
+    
+    .typing-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text-color);
+        margin: 0 2px;
+        animation: typing 1.4s infinite;
+    }
+    
+    .typing-dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    
+    @keyframes typing {
+        0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+        30% { opacity: 1; transform: translateY(-10px); }
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .suggestions {
+        padding: 10px 0;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .suggestion-chip {
+        padding: 8px 16px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--text-color);
+        transition: all 0.3s;
+    }
+    
+    .suggestion-chip:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .confirmation-box {
+        background: var(--light-bg);
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+    
+    .confirmation-box h4 {
+        margin-top: 0;
+        color: var(--primary-color);
+    }
+    
+    .welcome-message {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-color);
+    }
+    
+    .welcome-message h2 {
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+    
+    .welcome-examples {
+        margin-top: 30px;
+        text-align: left;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .welcome-examples h4 {
+        color: var(--primary-color);
+    }
+    
+    .example-item {
+        padding: 10px;
+        margin: 5px 0;
+        background: var(--card-bg);
+        border-left: 3px solid var(--primary-color);
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .example-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="chat-container">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <div class="avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="info">
+                <h3>AI Assistant</h3>
+                <p>Add transactions with natural language</p>
+            </div>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message" id="welcomeMessage">
+                <h2>👋 Hi {{ user.first_name }}!</h2>
+                <p>I'm your AI assistant. Just tell me about your transaction in plain English!</p>
+                
+                <div class="welcome-examples">
+                    <h4>Try saying:</h4>
+                    <div class="example-item" onclick="sendExample(this.textContent)">
+                        "Add income of ₹50000 under salary today"
+                    </div>
+                    <div class="example-item" onclick="sendExample(this.textContent)">
+                        "Spent ₹500 on groceries yesterday"
+                    </div>
+                    <div class="example-item" onclick="sendExample(this.textContent)">
+                        "Paid ₹2000 for electricity on 15th"
+                    </div>
+                    <div class="example-item" onclick="sendExample(this.textContent)">
+                        "Add expense of rs 1500 under transport"
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Typing indicator -->
+            <div class="message bot">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="typing-indicator" id="typingIndicator">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="Type your message... (e.g., add income of rs 10000 under salary on 03 nov 25)"
+                    autocomplete="off"
+                >
+                <button class="send-button" id="sendButton">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let conversationContext = {};
+let pendingTransaction = null;
+
+$(document).ready(function() {
+    const chatInput = $('#chatInput');
+    const sendButton = $('#sendButton');
+    const chatMessages = $('#chatMessages');
+    
+    // Handle send button click
+    sendButton.on('click', sendMessage);
+    
+    // Handle enter key
+    chatInput.on('keypress', function(e) {
+        if (e.which === 13) {
+            sendMessage();
+        }
+    });
+    
+    // Focus input
+    chatInput.focus();
+});
+
+function sendExample(text) {
+    $('#chatInput').val(text);
+    sendMessage();
+}
+
+function sendMessage() {
+    const input = $('#chatInput');
+    const message = input.val().trim();
+    
+    if (!message) return;
+    
+    // Hide welcome message
+    $('#welcomeMessage').fadeOut();
+    
+    // Add user message to chat
+    addMessage(message, 'user');
+    
+    // Clear input
+    input.val('');
+    
+    // Show typing indicator
+    showTyping();
+    
+    // Send to API
+    $.ajax({
+        url: '/ai-assistant/api/parse/',
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify({
+            message: message,
+            context: conversationContext
+        }),
+        success: function(response) {
+            hideTyping();
+            
+            // Update context
+            conversationContext = response.context;
+            
+            // Handle response
+            if (response.ready_to_save) {
+                // Show confirmation
+                showConfirmation(response.parsed_data);
+                pendingTransaction = response.parsed_data;
+            } else {
+                // Ask for missing information
+                handleQuestion(response.response);
+            }
+        },
+        error: function(xhr) {
+            hideTyping();
+            addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+        }
+    });
+}
+
+function addMessage(text, sender) {
+    const messagesContainer = $('#chatMessages');
+    const avatar = sender === 'bot' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>';
+    
+    const messageHtml = `
+        <div class="message ${sender}">
+            <div class="message-avatar">${avatar}</div>
+            <div class="message-content">${text}</div>
+        </div>
+    `;
+    
+    // Insert before typing indicator
+    $(messageHtml).insertBefore('#typingIndicator').parent();
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+}
+
+function showTyping() {
+    $('#typingIndicator').addClass('active');
+    scrollToBottom();
+}
+
+function hideTyping() {
+    $('#typingIndicator').removeClass('active');
+}
+
+function scrollToBottom() {
+    const messagesContainer = $('#chatMessages');
+    messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+}
+
+function handleQuestion(response) {
+    let messageHtml = `<div class="message-content">${response.message}</div>`;
+    
+    if (response.buttons && response.buttons.length > 0) {
+        messageHtml += '<div class="message-buttons">';
+        response.buttons.forEach(button => {
+            messageHtml += `<button class="message-button" onclick="handleButtonClick('${button}')">${button}</button>`;
+        });
+        messageHtml += '</div>';
+    }
+    
+    if (response.categories && response.categories.length > 0) {
+        messageHtml += '<div class="message-buttons">';
+        response.categories.forEach(cat => {
+            messageHtml += `<button class="message-button" onclick="handleCategoryClick('${cat.name}')">${cat.name}</button>`;
+        });
+        messageHtml += '</div>';
+    }
+    
+    const fullMessage = `
+        <div class="message bot">
+            <div class="message-avatar"><i class="fas fa-robot"></i></div>
+            ${messageHtml}
+        </div>
+    `;
+    
+    $(fullMessage).insertBefore('#typingIndicator').parent();
+    scrollToBottom();
+}
+
+function handleButtonClick(button) {
+    $('#chatInput').val(button);
+    sendMessage();
+}
+
+function handleCategoryClick(category) {
+    $('#chatInput').val(category);
+    sendMessage();
+}
+
+function showConfirmation(data) {
+    const transType = data.type || 'transaction';
+    const amount = data.amount || 0;
+    const category = (data.category || 'unknown').charAt(0).toUpperCase() + (data.category || 'unknown').slice(1);
+    const date = new Date(data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    
+    let confirmHtml = `
+        <div class="confirmation-box">
+            <h4>✅ Ready to add this ${transType}:</h4>
+            <p><strong>Amount:</strong> ₹${Number(amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+            <p><strong>Category:</strong> ${category}</p>
+            <p><strong>Date:</strong> ${date}</p>
+    `;
+    
+    if (data.description) {
+        confirmHtml += `<p><strong>Note:</strong> ${data.description}</p>`;
+    }
+    
+    confirmHtml += `
+        </div>
+        <div class="message-buttons">
+            <button class="message-button" onclick="confirmTransaction()" style="background: var(--secondary-color); color: white; border-color: var(--secondary-color);">
+                ✓ Confirm & Add
+            </button>
+            <button class="message-button" onclick="cancelTransaction()">
+                ✗ Cancel
+            </button>
+        </div>
+    `;
+    
+    const fullMessage = `
+        <div class="message bot">
+            <div class="message-avatar"><i class="fas fa-robot"></i></div>
+            <div class="message-content">${confirmHtml}</div>
+        </div>
+    `;
+    
+    $(fullMessage).insertBefore('#typingIndicator').parent();
+    scrollToBottom();
+}
+
+function confirmTransaction() {
+    if (!pendingTransaction) return;
+    
+    showTyping();
+    
+    $.ajax({
+        url: '/ai-assistant/api/create/',
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(pendingTransaction),
+        success: function(response) {
+            hideTyping();
+            
+            if (response.success) {
+                addMessage(`🎉 Great! I've added your ${response.transaction.type} of ₹${response.transaction.amount.toLocaleString('en-IN')}. Anything else?`, 'bot');
+                
+                // Reset context
+                conversationContext = {};
+                pendingTransaction = null;
+            } else {
+                addMessage('Sorry, there was an error adding the transaction. Please try again.', 'bot');
+            }
+        },
+        error: function(xhr) {
+            hideTyping();
+            const error = xhr.responseJSON?.error || 'Unknown error';
+            addMessage(`Error: ${error}. Please try again.`, 'bot');
+        }
+    });
+}
+
+function cancelTransaction() {
+    addMessage('Transaction cancelled. What would you like to do instead?', 'bot');
+    conversationContext = {};
+    pendingTransaction = null;
+}
+</script>
+{% endblock %}
+
