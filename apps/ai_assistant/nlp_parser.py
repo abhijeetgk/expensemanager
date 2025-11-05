@@ -176,6 +176,8 @@ class TransactionParser:
             'shopping': ['shopping', 'clothes', 'clothing', 'fashion'],
             'healthcare': ['healthcare', 'medical', 'doctor', 'medicine', 'hospital'],
             'education': ['education', 'course', 'training', 'tuition', 'books'],
+            'savings': ['saving', 'savings', 'investment', 'fixed deposit', 'fd'],
+            'transfer': ['transfer', 'transferred', 'wire'],
         }
         
         # Look for category keywords
@@ -184,11 +186,13 @@ class TransactionParser:
                 if keyword in text:
                     return category
         
-        # Look for "under <category>" or "for <category>" pattern
-        under_pattern = r'(?:under|for|category|as)\s+([a-z]+)'
+        # Look for "under <category>", "for <category>", or "to <category>" pattern
+        under_pattern = r'(?:under|for|category|as|to)\s+([a-z\s]+?)(?:\s+(?:on|today|yesterday|tomorrow|\d)|$)'
         match = re.search(under_pattern, text, re.IGNORECASE)
         if match:
-            return match.group(1)
+            category_text = match.group(1).strip()
+            # Return first word if multiple words (e.g., "saving account" -> "saving")
+            return category_text.split()[0] if category_text else None
         
         return None
     
@@ -299,8 +303,8 @@ class ConversationalBot:
                 'buttons': ['Confirm', 'Edit', 'Cancel']
             }
         
-        # Ask for missing information
-        if 'type' in missing:
+        # Ask for missing information - but only ask once per field
+        if 'type' in missing and 'type' not in self.context:
             return {
                 'type': 'question',
                 'message': "Is this an income or expense?",
@@ -308,7 +312,7 @@ class ConversationalBot:
                 'field': 'type'
             }
         
-        if 'amount' in missing:
+        if 'amount' in missing and 'amount' not in self.context:
             return {
                 'type': 'question',
                 'message': "How much is the amount?",
@@ -316,12 +320,21 @@ class ConversationalBot:
                 'placeholder': 'e.g., 5000'
             }
         
-        if 'category' in missing:
+        if 'category' in missing and 'category' not in self.context:
             return {
                 'type': 'question',
-                'message': f"What category for this {parsed.get('type', 'transaction')}?",
+                'message': f"What category for this {parsed.get('type', 'transaction')}? (e.g., food, transport, salary, etc.)",
                 'field': 'category',
                 'requires_fetch': True  # Need to fetch categories from DB
+            }
+        
+        # If we still have missing fields but already asked, show what we have
+        if missing:
+            # Try to proceed with what we have or ask user to provide complete info
+            return {
+                'type': 'error',
+                'message': f"I'm having trouble understanding. Please provide all details like: 'Add income of ₹10000 under salary today' or 'Spent ₹500 on food yesterday'",
+                'buttons': []
             }
         
         return {

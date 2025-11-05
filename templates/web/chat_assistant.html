@@ -281,28 +281,33 @@
     .welcome-examples {
         margin-top: 30px;
         text-align: left;
-        max-width: 500px;
+        max-width: 600px;
         margin-left: auto;
         margin-right: auto;
     }
     
     .welcome-examples h4 {
         color: var(--primary-color);
+        margin-bottom: 15px;
     }
     
     .example-item {
-        padding: 10px;
-        margin: 5px 0;
+        padding: 12px 15px;
+        margin: 10px 0;
         background: var(--card-bg);
-        border-left: 3px solid var(--primary-color);
-        border-radius: 5px;
+        border-left: 4px solid var(--primary-color);
+        border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
     }
     
     .example-item:hover {
         transform: translateX(5px);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        background: var(--light-bg);
     }
 </style>
 {% endblock %}
@@ -491,6 +496,26 @@ function scrollToBottom() {
 }
 
 function handleQuestion(response) {
+    // Check if this is an error/help message
+    if (response.type === 'error') {
+        let messageHtml = `<div class="message-content" style="background: #FEE2E2; color: #991B1B; border-left: 4px solid #EF4444;">${response.message}</div>`;
+        
+        const fullMessage = `
+            <div class="message bot">
+                <div class="message-avatar"><i class="fas fa-robot"></i></div>
+                ${messageHtml}
+            </div>
+        `;
+        
+        $(fullMessage).insertBefore('#typingIndicator').parent();
+        scrollToBottom();
+        
+        // Reset context to start fresh
+        conversationContext = {};
+        pendingTransaction = null;
+        return;
+    }
+    
     let messageHtml = `<div class="message-content">${response.message}</div>`;
     
     if (response.buttons && response.buttons.length > 0) {
@@ -503,7 +528,7 @@ function handleQuestion(response) {
     
     if (response.categories && response.categories.length > 0) {
         messageHtml += '<div class="message-buttons">';
-        response.categories.forEach(cat => {
+        response.categories.slice(0, 8).forEach(cat => {  // Limit to 8 categories for better UX
             messageHtml += `<button class="message-button" onclick="handleCategoryClick('${cat.name}')">${cat.name}</button>`;
         });
         messageHtml += '</div>';
